@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffcf19" />
+    <meta name="description" content="Pastéis, lanches, quentinhas e muito mais. Faça seu pedido pelo WhatsApp." />
+    <title>Gustavo do Pastel | Cardápio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="Gustavo do Pastel, início">
+        <span class="brand-face" aria-hidden="true"><i></i></span>
+        <span><strong>Gustavo</strong><em>do Pastel</em></span>
+      </a>
+      <nav aria-label="Navegação principal">
+        <a href="#cardapio">Cardápio</a>
+        <a href="#como-pedir">Como pedir</a>
+      </nav>
+      <button class="mini-cart" type="button" data-open-cart aria-label="Abrir pedido">
+        Pedido <b data-cart-count>0</b>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-copy">
+          <p class="eyebrow">COMIDA BOA, FEITA COM CARINHO</p>
+          <h1>Sabor de verdade <span>em cada pedido.</span></h1>
+          <p>Pastéis crocantes, lanches caprichados e aquele almoço caseiro que dá vontade de repetir.</p>
+          <a class="main-button" href="#cardapio">Ver cardápio <span>↓</span></a>
+          <small><i></i> Pedido simples pelo WhatsApp</small>
+        </div>
+        <div class="hero-art" aria-label="Ilustração decorativa de um pastel">
+          <span class="price-stamp">A PARTIR<br>DE <b>R$ 3</b></span>
+          <div class="pastel"><i></i><i></i><i></i></div>
+          <b class="spark one">✦</b><b class="spark two">✦</b>
+          <span class="art-label">CROCANTE<br>E QUENTINHO</span>
+        </div>
+      </section>
+
+      <section class="menu" id="cardapio">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">ESCOLHA SEUS FAVORITOS</p>
+            <h2>Nosso cardápio</h2>
+          </div>
+          <label class="search"><span>⌕</span><input type="search" placeholder="Buscar no cardápio" aria-label="Buscar no cardápio" data-search /></label>
+        </div>
+        <div class="category-list" role="tablist" aria-label="Categorias do cardápio">
+          <button class="category active" data-category="Todos" type="button">Todos</button>
+          <button class="category" data-category="Salgados" type="button">Salgados</button>
+          <button class="category" data-category="Lanches" type="button">Lanches</button>
+          <button class="category" data-category="Quentinhas" type="button">Quentinhas</button>
+          <button class="category" data-category="Bebidas" type="button">Bebidas</button>
+          <button class="category" data-category="Lasanhas" type="button">Lasanhas</button>
+        </div>
+        <p class="menu-tip" data-menu-tip>Todos os salgados por apenas <b>R$ 3,00</b> cada.</p>
+        <div class="product-grid" data-product-grid></div>
+        <div class="empty" hidden data-empty><b>⌕</b><h3>Nada encontrado</h3><p>Tente outro nome ou categoria.</p></div>
+      </section>
+
+      <section class="how" id="como-pedir">
+        <div><p class="eyebrow">SEM COMPLICAÇÃO</p><h2>Pediu, confirmou, agora é só aproveitar.</h2></div>
+        <ol>
+          <li><b>01</b><div><h3>Escolha</h3><p>Adicione no pedido tudo que der vontade.</p></div></li>
+          <li><b>02</b><div><h3>Confirme</h3><p>Envie sua lista pronta pelo WhatsApp.</p></div></li>
+          <li><b>03</b><div><h3>Aproveite</h3><p>Combine retirada ou entrega direto com a gente.</p></div></li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#inicio"><span class="brand-face" aria-hidden="true"><i></i></span><span><strong>Gustavo</strong><em>do Pastel</em></span></a>
+      <p>Comida boa, feita com carinho.</p>
+      <a href="#inicio">Voltar ao topo ↑</a>
+    </footer>
+
+    <button class="floating-cart" type="button" data-open-cart aria-label="Ver pedido">
+      <span>Pedido</span> <b data-cart-count>0</b> <em data-cart-total>R$ 0,00</em>
+    </button>
+
+    <div class="cart-layer" hidden data-cart-layer>
+      <button class="backdrop" type="button" data-close-cart aria-label="Fechar pedido"></button>
+      <aside class="cart-panel" aria-label="Seu pedido" aria-modal="true" role="dialog">
+        <div class="cart-head"><div><p class="eyebrow">SEU PEDIDO</p><h2>Quase lá!</h2></div><button type="button" data-close-cart aria-label="Fechar pedido">×</button></div>
+        <div data-cart-items></div>
+        <div class="cart-empty" data-cart-empty><b>▱</b><h3>Seu pedido está vazio</h3><p>Escolha seus favoritos no cardápio.</p></div>
+        <label class="note" data-cart-note hidden>Alguma observação?<textarea placeholder="Ex.: sem cebola, vou buscar às 18h..." data-note></textarea></label>
+        <div class="total" data-cart-total-row hidden><span>Total do pedido</span><b data-cart-total>R$ 0,00</b></div>
+        <button class="whatsapp" type="button" data-send-order hidden>Finalizar pelo WhatsApp ↗</button>
+        <p class="phone-note" data-phone-note hidden>O número da loja ainda precisa ser configurado.</p>
+      </aside>
+    </div>
+
+    <div class="customizer-layer" hidden data-customizer>
+      <button class="backdrop" type="button" data-close-customizer aria-label="Fechar opções"></button>
+      <aside class="customizer-panel" aria-label="Personalizar item" aria-modal="true" role="dialog">
+        <div class="cart-head">
+          <div><p class="eyebrow">PERSONALIZE SEU PEDIDO</p><h2 data-custom-title>Escolha</h2></div>
+          <button type="button" data-close-customizer aria-label="Fechar opções">×</button>
+        </div>
+        <div data-custom-content></div>
+      </aside>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
