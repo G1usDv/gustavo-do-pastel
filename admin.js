@@ -1,4 +1,4 @@
-const supabase = window.supabaseClient;
+const supabaseClient = window.supabaseClient;
 const state = { products: [], search: "", category: "Todos" };
 const loginScreen = document.querySelector("[data-login-screen]");
 const resetScreen = document.querySelector("[data-reset-screen]");
@@ -74,7 +74,7 @@ function renderProducts() {
 
 async function loadProducts() {
   setPanelStatus("Carregando cardápio...");
-  const { data, error } = await supabase.from("products").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true });
+  const { data, error } = await supabaseClient.from("products").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true });
   if (error) {
     setPanelStatus("Não foi possível abrir o cardápio. Confira a configuração do Supabase e o e-mail de administradora.", true);
     return;
@@ -90,9 +90,9 @@ async function uploadPhoto(file, productName) {
   const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const safeName = productName.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "produto";
   const path = `produtos/${Date.now()}-${safeName}.${extension}`;
-  const { error } = await supabase.storage.from("product-images").upload(path, file, { cacheControl: "3600", upsert: false });
+  const { error } = await supabaseClient.storage.from("product-images").upload(path, file, { cacheControl: "3600", upsert: false });
   if (error) throw error;
-  return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+  return supabaseClient.storage.from("product-images").getPublicUrl(path).data.publicUrl;
 }
 
 async function saveProduct(card) {
@@ -120,9 +120,9 @@ async function saveProduct(card) {
     const payload = productForDatabase(product, state.products.indexOf(product));
     let error;
     if (productIsNew(product)) {
-      ({ error } = await supabase.from("products").insert(payload));
+      ({ error } = await supabaseClient.from("products").insert(payload));
     } else {
-      ({ error } = await supabase.from("products").update(payload).eq("id", product.id));
+      ({ error } = await supabaseClient.from("products").update(payload).eq("id", product.id));
     }
     if (error) throw error;
     setPanelStatus(`“${name}” foi salvo.`);
@@ -139,7 +139,7 @@ async function toggleAvailability(card) {
   const product = state.products.find((item) => String(item.id) === card.dataset.editorId);
   if (!product || productIsNew(product)) return;
   const available = card.querySelector("[data-available]").checked;
-  const { error } = await supabase.from("products").update({ available }).eq("id", product.id);
+  const { error } = await supabaseClient.from("products").update({ available }).eq("id", product.id);
   if (error) {
     card.querySelector("[data-available]").checked = !available;
     setPanelStatus("Não foi possível mudar a disponibilidade.", true);
@@ -159,7 +159,7 @@ async function deleteProduct(card) {
     return;
   }
   if (!window.confirm(`Excluir “${product.name}” do cardápio?`)) return;
-  const { error } = await supabase.from("products").delete().eq("id", product.id);
+  const { error } = await supabaseClient.from("products").delete().eq("id", product.id);
   if (error) {
     setPanelStatus("Não foi possível excluir este produto.", true);
     return;
@@ -179,7 +179,7 @@ async function importCurrentCatalog() {
   importButton.disabled = true;
   importButton.textContent = "Importando...";
   const rows = window.GUSTAVO_CATALOG.products.map((product, index) => productForDatabase({ ...product, image_url: product.image, detail: product.detail, available: true }, index));
-  const { error } = await supabase.from("products").insert(rows);
+  const { error } = await supabaseClient.from("products").insert(rows);
   if (error) {
     setPanelStatus("Não foi possível importar o cardápio. " + error.message, true);
     importButton.disabled = false;
@@ -209,18 +209,18 @@ function showResetScreen() {
   resetScreen.hidden = false;
 }
 
-if (!supabase) {
+if (!supabaseClient) {
   loginStatus.textContent = "A conexão com o Supabase ainda não foi configurada.";
 } else {
-  if (isPasswordRecovery()) supabase.auth.getSession().then(showResetScreen);
-  else supabase.auth.getSession().then(({ data }) => { if (data.session) showDashboard(); });
+  if (isPasswordRecovery()) supabaseClient.auth.getSession().then(showResetScreen);
+  else supabaseClient.auth.getSession().then(({ data }) => { if (data.session) showDashboard(); });
 }
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!supabase) return;
+  if (!supabaseClient) return;
   loginStatus.textContent = "Entrando...";
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabaseClient.auth.signInWithPassword({
     email: document.querySelector("[data-login-email]").value.trim(),
     password: document.querySelector("[data-login-password]").value,
   });
@@ -230,7 +230,7 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("[data-forgot-password]").addEventListener("click", async () => {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   const email = document.querySelector("[data-login-email]").value.trim();
   if (!email) {
     loginStatus.textContent = "Informe seu e-mail acima para receber o link de recuperação.";
@@ -239,18 +239,18 @@ document.querySelector("[data-forgot-password]").addEventListener("click", async
   }
   loginStatus.textContent = "Enviando link de recuperação...";
   const redirectTo = new URL("admin.html", window.location.href).href;
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
   loginStatus.textContent = error ? "Não foi possível enviar o link agora. Tente novamente." : "Pronto! Confira seu e-mail para criar uma nova senha.";
 });
 
 resetForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!supabase) return;
+  if (!supabaseClient) return;
   const password = document.querySelector("[data-new-password]").value;
   const confirmation = document.querySelector("[data-confirm-password]").value;
   if (password !== confirmation) { resetStatus.textContent = "As duas senhas precisam ser iguais."; return; }
   resetStatus.textContent = "Salvando nova senha...";
-  const { error } = await supabase.auth.updateUser({ password });
+  const { error } = await supabaseClient.auth.updateUser({ password });
   if (error) { resetStatus.textContent = "O link expirou. Peça outro link de recuperação."; return; }
   history.replaceState({}, document.title, "admin.html");
   resetStatus.textContent = "Senha alterada com sucesso.";
@@ -268,4 +268,4 @@ productGrid.addEventListener("click", (event) => {
   if (event.target.closest("[data-delete]")) deleteProduct(card);
 });
 productGrid.addEventListener("change", (event) => { if (event.target.matches("[data-available]")) toggleAvailability(event.target.closest("[data-editor-id]")); });
-document.querySelector("[data-logout]").addEventListener("click", async () => { await supabase.auth.signOut(); window.location.reload(); });
+document.querySelector("[data-logout]").addEventListener("click", async () => { await supabaseClient.auth.signOut(); window.location.reload(); });
