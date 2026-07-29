@@ -1,18 +1,24 @@
 // WhatsApp da loja: DDI + DDD + número, apenas dígitos.
 const WHATSAPP_NUMBER = "557981136035";
 
-// Estas são as proteínas que aparecem no cardápio atual. Edite aqui quando o cardápio do dia mudar.
-const PROTEIN_OPTIONS = ["Frango", "Bisteca", "Calabresa"];
-const RICE_OPTIONS = ["Arroz branco", "Arroz temperado"];
-const BEAN_OPTIONS = ["Feijão tropeiro", "Feijão de caldo"];
-const PASTA_OPTIONS = ["Macarrão espaguete"];
-const SALAD_OPTIONS = ["Vinagrete", "Salada de maionese", "Salada simples (alface, tomate e cebola)"];
-const EXTRA_OPTIONS = [
-  { label: "Purê de batata", value: "Purê de batata" },
-  { label: "Legumes refogados", value: "Legumes: batata e cenoura refogadas no alho e na cebola, com uma pitada de orégano" },
-];
-const JUICE_FLAVORS = ["Maracujá", "Goiaba", "Acerola", "Laranja"];
-const VITAMIN_FLAVORS = ["Banana", "Abacate", "Mamão"];
+const FALLBACK_ORDER_OPTIONS = window.GUSTAVO_CATALOG?.orderOptions || {
+  meal: {
+    proteins: ["Frango", "Bisteca", "Calabresa"],
+    groups: [
+      { id: "rice", title: "Arroz", orderLabel: "Arroz", rule: "required-one", hint: "escolha 1", options: ["Arroz branco", "Arroz temperado"] },
+      { id: "beans", title: "Feijão", orderLabel: "Feijão", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem feijão", options: ["Feijão tropeiro", "Feijão de caldo"] },
+      { id: "pasta", title: "Macarrão", orderLabel: "Macarrão", rule: "optional-many", hint: "opcional", options: ["Macarrão espaguete"] },
+      { id: "salad", title: "Saladas", orderLabel: "Salada", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem salada", options: ["Vinagrete", "Salada de maionese", "Salada simples (alface, tomate e cebola)"] },
+      { id: "extra", title: "Extras", orderLabel: "Extra", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem extra", options: ["Purê de batata", "Legumes refogados: batata e cenoura refogadas no alho e na cebola, com uma pitada de orégano"] },
+    ],
+  },
+  drinks: { juiceFlavors: ["Maracujá", "Goiaba", "Acerola", "Laranja"], vitaminFlavors: ["Banana", "Abacate", "Mamão"] },
+};
+const cloneOrderOptions = (options) => JSON.parse(JSON.stringify(options));
+let orderOptions = cloneOrderOptions(FALLBACK_ORDER_OPTIONS);
+const JUICE_FLAVORS = orderOptions.drinks.juiceFlavors;
+const VITAMIN_FLAVORS = orderOptions.drinks.vitaminFlavors;
+const ORDER_OPTIONS_PRODUCT_NAME = "__GUSTAVO_ORDER_OPTIONS__";
 
 let products = [
   ["Pastel de Frango", "Salgados", 3, "Crocante e feito na hora", "Favorito", null, "assets/products/pastel-autoral.jpg"],
@@ -38,10 +44,10 @@ let products = [
   ["Quentinha · 1 proteína", "Quentinhas", 15, "Escolha proteína e acompanhamentos", "Almoço", { type: "meal", proteinCount: 1 }, "assets/products/quentinha-frango.jpg"],
   ["Quentinha · 2 proteínas", "Quentinhas", 20, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 2 }, "assets/products/quentinha-frango.jpg"],
   ["Quentinha · 3 proteínas", "Quentinhas", 25, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 3 }, "assets/products/quentinha-calabresa.jpg"],
-  ["Suco · 400 ml", "Bebidas", 5, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
-  ["Suco · 500 ml", "Bebidas", 6, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
-  ["Suco · 1 litro", "Bebidas", 12, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
-  ["Vitamina · 500 ml", "Bebidas", 7, "Escolha seu sabor", null, { type: "flavor", flavors: VITAMIN_FLAVORS, label: "sabor da vitamina" }, "assets/products/stock-vitamina.jpg"],
+  ["Suco · 400 ml", "Bebidas", 5, "Escolha seu sabor", null, { type: "flavor", flavorGroup: "juice", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Suco · 500 ml", "Bebidas", 6, "Escolha seu sabor", null, { type: "flavor", flavorGroup: "juice", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Suco · 1 litro", "Bebidas", 12, "Escolha seu sabor", null, { type: "flavor", flavorGroup: "juice", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Vitamina · 500 ml", "Bebidas", 7, "Escolha seu sabor", null, { type: "flavor", flavorGroup: "vitamin", flavors: VITAMIN_FLAVORS, label: "sabor da vitamina" }, "assets/products/stock-vitamina.jpg"],
   ["Lasanha Bolonhesa · 250 g", "Lasanhas", 10, "Carne bovina e massa artesanal", "Caseira", null, "assets/products/stock-lasanha.jpg"],
   ["Lasanha Bolonhesa · 500 g", "Lasanhas", 20, "Carne bovina e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
   ["Lasanha Bolonhesa · 750 g", "Lasanhas", 25, "Carne bovina e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
@@ -132,35 +138,49 @@ function renderCart() {
     <strong>${money(item.price * item.quantity)}</strong></div>`).join("");
 }
 
+const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
+
+function flavorOptionsFor(product) {
+  const custom = product.custom || {};
+  const group = custom.flavorGroup || (product.name.toLocaleLowerCase("pt-BR").includes("vitamina") ? "vitamin" : "juice");
+  const settingsFlavors = group === "vitamin" ? orderOptions.drinks.vitaminFlavors : orderOptions.drinks.juiceFlavors;
+  return settingsFlavors.length ? settingsFlavors : (custom.flavors || []);
+}
+
+function renderMealGroup(group, index) {
+  if (!group.options.length) return "";
+  const required = group.rule === "required-one";
+  const multiple = group.rule === "optional-many";
+  const inputType = multiple ? "checkbox" : "radio";
+  const inputName = `meal-${group.id}`;
+  const className = index > 0 ? "meal-group" : "meal-group meal-group-first";
+  const emptyOption = !required && !multiple
+    ? `<label><input type="radio" name="${inputName}" value="" checked><span>${escapeHtml(group.emptyLabel || "Nenhum")}</span></label>`
+    : "";
+  const options = group.options.map((option) => `<label><input type="${inputType}" name="${inputName}" value="${escapeHtml(option)}" data-meal-option="${group.id}"><span>${escapeHtml(option)}</span></label>`).join("");
+  return `<section class="${className}" data-meal-group="${group.id}"><p class="meal-choice-label">${escapeHtml(group.title)} <small>${escapeHtml(group.hint || "opcional")}</small></p><div class="option-chips side-chips">${emptyOption}${options}</div></section>`;
+}
+
 function openCustomizer(product) {
   state.customProduct = product;
   customTitle.textContent = product.name;
-  const custom = product.custom;
+  const custom = product.custom || {};
   if (custom.type === "flavor") {
-    customContent.innerHTML = `<p class="custom-intro">Escolha o ${custom.label}:</p><div class="option-chips">${custom.flavors.map((flavor, index) => `<label><input type="radio" name="flavor" value="${flavor}" ${index === 0 ? "checked" : ""}><span>${flavor}</span></label>`).join("")}</div><p class="custom-error" data-custom-error></p><button class="confirm-custom" type="button" data-confirm-custom>Adicionar ao pedido <span>+</span></button>`;
+    const flavors = flavorOptionsFor(product);
+    if (!flavors.length) {
+      customContent.innerHTML = `<p class="custom-intro">Não há sabores disponíveis no momento.</p><p class="custom-error">A loja ainda não cadastrou os sabores desta bebida.</p>`;
+    } else {
+      customContent.innerHTML = `<p class="custom-intro">Escolha o ${escapeHtml(custom.label || "sabor")}:</p><div class="option-chips">${flavors.map((flavor, index) => `<label><input type="radio" name="flavor" value="${escapeHtml(flavor)}" ${index === 0 ? "checked" : ""}><span>${escapeHtml(flavor)}</span></label>`).join("")}</div><p class="custom-error" data-custom-error></p><button class="confirm-custom" type="button" data-confirm-custom>Adicionar ao pedido <span>+</span></button>`;
+    }
   } else {
-    state.customProteinCounts = Object.fromEntries(PROTEIN_OPTIONS.map((protein) => [protein, 0]));
+    const meal = orderOptions.meal;
+    state.customProteinCounts = Object.fromEntries(meal.proteins.map((protein) => [protein, 0]));
     customContent.innerHTML = `
       <p class="custom-intro">Escolha <b>${custom.proteinCount} ${custom.proteinCount === 1 ? "proteína" : "proteínas"}</b>. Você pode repetir a mesma opção se quiser.</p>
       <p class="option-label">Proteínas <b data-protein-counter>0 de ${custom.proteinCount}</b></p>
-      <div class="protein-picker">${PROTEIN_OPTIONS.map((protein) => `<div class="protein-line" data-protein-line="${protein}"><span>${protein}</span><div><button type="button" data-protein-change data-protein-name="${protein}" data-amount="-1" aria-label="Remover uma porção de ${protein}">−</button><b data-protein-count="${protein}">0</b><button type="button" data-protein-change data-protein-name="${protein}" data-amount="1" aria-label="Adicionar uma porção de ${protein}">+</button></div></div>`).join("")}</div>
-      <section class="meal-group">
-        <p class="option-label sides-label">Guarnições <small>monte como preferir</small></p>
-        <p class="meal-choice-label">Arroz <b>escolha 1</b></p>
-        <div class="option-chips">${RICE_OPTIONS.map((rice) => `<label><input type="radio" name="rice" value="${rice}"><span>${rice}</span></label>`).join("")}</div>
-        <p class="meal-choice-label">Feijão <small>escolha no máximo 1</small></p>
-        <div class="option-chips side-chips">${["Nenhum", ...BEAN_OPTIONS].map((bean, index) => `<label><input type="radio" name="beans" value="${bean}" ${index === 0 ? "checked" : ""}><span>${bean === "Nenhum" ? "Sem feijão" : bean}</span></label>`).join("")}</div>
-        <p class="meal-choice-label">Macarrão <small>opcional</small></p>
-        <div class="option-chips side-chips">${PASTA_OPTIONS.map((pasta) => `<label><input type="checkbox" data-pasta value="${pasta}"><span>${pasta}</span></label>`).join("")}</div>
-      </section>
-      <section class="meal-group">
-        <p class="option-label sides-label">Saladas <small>escolha no máximo 1</small></p>
-        <div class="option-chips side-chips">${["Nenhuma", ...SALAD_OPTIONS].map((salad, index) => `<label><input type="radio" name="salad" value="${salad}" ${index === 0 ? "checked" : ""}><span>${salad === "Nenhuma" ? "Sem salada" : salad}</span></label>`).join("")}</div>
-      </section>
-      <section class="meal-group">
-        <p class="option-label sides-label">Extras <small>escolha no máximo 1</small></p>
-        <div class="option-chips side-chips">${[{ label: "Sem extra", value: "Nenhum" }, ...EXTRA_OPTIONS].map((extra, index) => `<label><input type="radio" name="extra" value="${extra.value}" ${index === 0 ? "checked" : ""}><span>${extra.label}</span></label>`).join("")}</div>
-      </section>
+      <div class="protein-picker">${meal.proteins.map((protein) => `<div class="protein-line" data-protein-line="${escapeHtml(protein)}"><span>${escapeHtml(protein)}</span><div><button type="button" data-protein-change data-protein-name="${escapeHtml(protein)}" data-amount="-1" aria-label="Remover uma porção de ${escapeHtml(protein)}">−</button><b data-protein-count="${escapeHtml(protein)}">0</b><button type="button" data-protein-change data-protein-name="${escapeHtml(protein)}" data-amount="1" aria-label="Adicionar uma porção de ${escapeHtml(protein)}">+</button></div></div>`).join("")}</div>
+      <p class="option-label sides-label">Acompanhamentos <small>monte como preferir</small></p>
+      ${meal.groups.map(renderMealGroup).join("")}
       <p class="custom-error" data-custom-error></p><button class="confirm-custom" type="button" data-confirm-custom>Adicionar ao pedido <span>+</span></button>`;
   }
   customizer.hidden = false;
@@ -222,9 +242,31 @@ async function loadCatalogFromSupabase() {
     console.warn("Não foi possível carregar o cardápio online.", error.message);
     return;
   }
-  if (!data.length) return;
-  products = data.map(databaseProductToCatalog);
+  const orderOptionsProduct = data.find((product) => product.name === ORDER_OPTIONS_PRODUCT_NAME);
+  applySavedOrderOptions(orderOptionsProduct?.custom_config?.orderOptions);
+  const catalogProducts = data.filter((product) => product.name !== ORDER_OPTIONS_PRODUCT_NAME);
+  if (!catalogProducts.length) return;
+  products = catalogProducts.map(databaseProductToCatalog);
   renderProducts();
+}
+
+function applySavedOrderOptions(saved) {
+  if (!saved) return;
+  const fallback = cloneOrderOptions(FALLBACK_ORDER_OPTIONS);
+  const savedGroups = Array.isArray(saved?.meal?.groups) ? saved.meal.groups : [];
+  orderOptions = {
+    meal: {
+      proteins: Array.isArray(saved?.meal?.proteins) && saved.meal.proteins.length ? saved.meal.proteins : fallback.meal.proteins,
+      groups: fallback.meal.groups.map((group) => {
+        const savedGroup = savedGroups.find((item) => item.id === group.id);
+        return { ...group, options: Array.isArray(savedGroup?.options) ? savedGroup.options : group.options };
+      }),
+    },
+    drinks: {
+      juiceFlavors: Array.isArray(saved?.drinks?.juiceFlavors) ? saved.drinks.juiceFlavors : fallback.drinks.juiceFlavors,
+      vitaminFlavors: Array.isArray(saved?.drinks?.vitaminFlavors) ? saved.drinks.vitaminFlavors : fallback.drinks.vitaminFlavors,
+    },
+  };
 }
 
 document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => {
@@ -253,7 +295,8 @@ customizer.addEventListener("click", (event) => {
   if (!button) return;
   const product = state.customProduct;
   if (product.custom.type === "flavor") {
-    const flavor = customizer.querySelector("input[name=flavor]:checked").value;
+    const flavor = customizer.querySelector("input[name=flavor]:checked")?.value;
+    if (!flavor) return;
     addToCart(product, [`Sabor: ${flavor}`]);
   } else {
     const proteins = Object.entries(state.customProteinCounts).filter(([, quantity]) => quantity > 0);
@@ -263,23 +306,19 @@ customizer.addEventListener("click", (event) => {
       showCustomizerError(`Escolha exatamente ${max} ${max === 1 ? "proteína" : "proteínas"}.`);
       return;
     }
-    const rice = customizer.querySelector("input[name=rice]:checked")?.value;
-    if (!rice) {
-      showCustomizerError("Escolha arroz branco ou arroz temperado.");
-      return;
+    const selectedGroups = [];
+    for (const group of orderOptions.meal.groups) {
+      const values = [...customizer.querySelectorAll(`[data-meal-option="${group.id}"]:checked`)].map((input) => input.value).filter(Boolean);
+      if (group.rule === "required-one" && values.length !== 1) {
+        showCustomizerError(`Escolha uma opção de ${group.title.toLocaleLowerCase("pt-BR")}.`);
+        return;
+      }
+      if (values.length) selectedGroups.push(`${group.orderLabel}: ${values.join(", ")}`);
     }
-    const beans = customizer.querySelector("input[name=beans]:checked")?.value;
-    const pasta = selectedValues("[data-pasta]");
-    const salad = customizer.querySelector("input[name=salad]:checked")?.value;
-    const extra = customizer.querySelector("input[name=extra]:checked")?.value;
     const options = [
       `Proteína${max > 1 ? "s" : ""}: ${proteins.map(([protein, quantity]) => `${quantity}x ${protein}`).join(", ")}`,
-      `Arroz: ${rice}`,
-      beans !== "Nenhum" ? `Feijão: ${beans}` : "",
-      pasta.length ? `Macarrão: ${pasta.join(", ")}` : "",
-      salad !== "Nenhuma" ? `Salada: ${salad}` : "",
-      extra !== "Nenhum" ? `Extra: ${extra}` : "",
-    ].filter(Boolean);
+      ...selectedGroups,
+    ];
     addToCart(product, options);
   }
   closeCustomizer();

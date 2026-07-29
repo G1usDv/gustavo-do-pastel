@@ -1,15 +1,20 @@
 window.GUSTAVO_CATALOG = {
-  proteins: ["Frango", "Bisteca", "Calabresa"],
-  riceOptions: ["Arroz branco", "Arroz temperado"],
-  beanOptions: ["Feijão tropeiro", "Feijão de caldo"],
-  pastaOptions: ["Macarrão espaguete"],
-  saladOptions: ["Vinagrete", "Salada de maionese", "Salada simples (alface, tomate e cebola)"],
-  extraOptions: [
-    { label: "Purê de batata", value: "Purê de batata" },
-    { label: "Legumes refogados", value: "Legumes: batata e cenoura refogadas no alho e na cebola, com uma pitada de orégano" },
-  ],
-  juiceFlavors: ["Maracujá", "Goiaba", "Acerola", "Laranja"],
-  vitaminFlavors: ["Banana", "Abacate", "Mamão"],
+  orderOptions: {
+    meal: {
+      proteins: ["Frango", "Bisteca", "Calabresa"],
+      groups: [
+        { id: "rice", title: "Arroz", orderLabel: "Arroz", rule: "required-one", hint: "escolha 1", options: ["Arroz branco", "Arroz temperado"] },
+        { id: "beans", title: "Feijão", orderLabel: "Feijão", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem feijão", options: ["Feijão tropeiro", "Feijão de caldo"] },
+        { id: "pasta", title: "Macarrão", orderLabel: "Macarrão", rule: "optional-many", hint: "opcional", options: ["Macarrão espaguete"] },
+        { id: "salad", title: "Saladas", orderLabel: "Salada", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem salada", options: ["Vinagrete", "Salada de maionese", "Salada simples (alface, tomate e cebola)"] },
+        { id: "extra", title: "Extras", orderLabel: "Extra", rule: "optional-one", hint: "escolha no máximo 1", emptyLabel: "Sem extra", options: ["Purê de batata", "Legumes refogados: batata e cenoura refogadas no alho e na cebola, com uma pitada de orégano"] },
+      ],
+    },
+    drinks: {
+      juiceFlavors: ["Maracujá", "Goiaba", "Acerola", "Laranja"],
+      vitaminFlavors: ["Banana", "Abacate", "Mamão"],
+    },
+  },
   products: [
     { id: 1, name: "Pastel de Frango", category: "Salgados", price: 3, detail: "Crocante e feito na hora", badge: "Favorito", image: "assets/products/pastel-autoral.jpg" },
     { id: 2, name: "Pastel de Frango com Catupiry", category: "Salgados", price: 3, detail: "Recheio cremoso", image: "assets/products/pastel-autoral.jpg" },

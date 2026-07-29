@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#ffcf19" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Painel da loja | Gustavo do Pastel</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -72,6 +73,38 @@
           </div>
         </section>
 
+        <section class="order-options-card" data-order-options-card>
+          <div class="order-options-heading">
+            <div>
+              <p class="eyebrow">PERSONALIZAÇÕES DO PEDIDO</p>
+              <h2>Quentinha e bebidas</h2>
+              <p>Edite uma opção por linha. Essas escolhas aparecem para os clientes antes de adicionarem a quentinha, suco ou vitamina ao pedido.</p>
+            </div>
+            <span>Atualiza no site na hora</span>
+          </div>
+          <form class="order-options-form" data-order-options-form>
+            <section>
+              <h3>Quentinha</h3>
+              <div class="options-fields">
+                <label>Proteínas<textarea data-option-proteins placeholder="Frango&#10;Bisteca&#10;Calabresa"></textarea><small>Uma mesma proteína pode ser escolhida mais de uma vez na quentinha.</small></label>
+                <label>Arroz <b>cliente escolhe 1</b><textarea data-option-rice placeholder="Arroz branco&#10;Arroz temperado"></textarea></label>
+                <label>Feijão <b>cliente escolhe no máximo 1</b><textarea data-option-beans placeholder="Feijão tropeiro&#10;Feijão de caldo"></textarea></label>
+                <label>Macarrão <b>opcional</b><textarea data-option-pasta placeholder="Macarrão espaguete"></textarea></label>
+                <label>Saladas <b>cliente escolhe no máximo 1</b><textarea data-option-salad placeholder="Vinagrete&#10;Salada de maionese"></textarea></label>
+                <label>Extras <b>cliente escolhe no máximo 1</b><textarea data-option-extra placeholder="Purê de batata&#10;Legumes refogados"></textarea></label>
+              </div>
+            </section>
+            <section>
+              <h3>Bebidas</h3>
+              <div class="options-fields drink-options">
+                <label>Sabores dos sucos<textarea data-option-juice placeholder="Maracujá&#10;Goiaba&#10;Acerola&#10;Laranja"></textarea></label>
+                <label>Sabores das vitaminas<textarea data-option-vitamin placeholder="Banana&#10;Abacate&#10;Mamão"></textarea></label>
+              </div>
+            </section>
+            <div class="options-footer"><button class="save-options" type="submit">Salvar opções da quentinha e bebidas</button><p data-options-status aria-live="polite"></p></div>
+          </form>
+        </section>
+
         <div class="tools-row">
           <label class="product-search">⌕<input type="search" placeholder="Buscar produto" data-product-search /></label>
           <label class="category-filter">Categoria<select data-category-filter><option value="Todos">Todas as categorias</option><option>Salgados</option><option>Lanches</option><option>Quentinhas</option><option>Bebidas</option><option>Lasanhas</option></select></label>
@@ -87,6 +120,6 @@
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
     <script src="catalog-data.js"></script>
-    <script src="admin.js?v=20260729"></script>
+    <script src="admin.js?v=20260729b"></script>
   </body>
 </html>

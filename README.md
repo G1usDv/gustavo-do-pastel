@@ -20,6 +20,10 @@ O painel está em `admin.html`. A administradora entra usando o e-mail e a senha
 
 Depois do primeiro acesso, basta clicar em **Importar cardápio atual** uma única vez. Em seguida, ela poderá criar, editar, ocultar, excluir e trocar a foto de produtos pelo painel. Itens indisponíveis somem automaticamente do catálogo público.
 
+### Quentinha e bebidas
+
+No topo do painel existe a área **Quentinha e bebidas**. Basta escrever uma opção por linha e salvar para atualizar as proteínas, acompanhamentos, saladas, extras e sabores que o cliente pode escolher.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório chamado `gustavo-do-pastel`.

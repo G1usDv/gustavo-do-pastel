@@ -1,5 +1,5 @@
 const supabaseClient = window.supabaseClient;
-const state = { products: [], search: "", category: "Todos" };
+const state = { products: [], search: "", category: "Todos", orderOptions: null };
 const loginScreen = document.querySelector("[data-login-screen]");
 const resetScreen = document.querySelector("[data-reset-screen]");
 const dashboard = document.querySelector("[data-dashboard]");
@@ -12,6 +12,10 @@ const productGrid = document.querySelector("[data-admin-products]");
 const emptyState = document.querySelector("[data-admin-empty]");
 const importButton = document.querySelector("[data-import-catalog]");
 const categoryOptions = ["Salgados", "Lanches", "Quentinhas", "Bebidas", "Lasanhas"];
+const orderOptionsForm = document.querySelector("[data-order-options-form]");
+const orderOptionsStatus = document.querySelector("[data-options-status]");
+const defaultOrderOptions = () => JSON.parse(JSON.stringify(window.GUSTAVO_CATALOG.orderOptions));
+const ORDER_OPTIONS_PRODUCT_NAME = "__GUSTAVO_ORDER_OPTIONS__";
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
 const moneyInput = (value) => Number(value || 0).toFixed(2).replace(".", ",");
@@ -31,6 +35,99 @@ const productForDatabase = (product, index) => ({
 function setPanelStatus(message = "", isError = false) {
   panelStatus.textContent = message;
   panelStatus.style.color = isError ? "#b23e29" : "#258b48";
+}
+
+function setOptionsStatus(message = "", isError = false) {
+  orderOptionsStatus.textContent = message;
+  orderOptionsStatus.style.color = isError ? "#b23e29" : "#258b48";
+}
+
+function cleanOptionLines(value) {
+  const seen = new Set();
+  return String(value || "").split(/\r?\n/).map((line) => line.trim()).filter((line) => {
+    const key = line.toLocaleLowerCase("pt-BR");
+    if (!line || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normaliseOrderOptions(value) {
+  const fallback = defaultOrderOptions();
+  const savedGroups = Array.isArray(value?.meal?.groups) ? value.meal.groups : [];
+  return {
+    meal: {
+      proteins: Array.isArray(value?.meal?.proteins) && value.meal.proteins.length ? value.meal.proteins : fallback.meal.proteins,
+      groups: fallback.meal.groups.map((group) => {
+        const savedGroup = savedGroups.find((item) => item.id === group.id);
+        return { ...group, options: Array.isArray(savedGroup?.options) ? savedGroup.options : group.options };
+      }),
+    },
+    drinks: {
+      juiceFlavors: Array.isArray(value?.drinks?.juiceFlavors) ? value.drinks.juiceFlavors : fallback.drinks.juiceFlavors,
+      vitaminFlavors: Array.isArray(value?.drinks?.vitaminFlavors) ? value.drinks.vitaminFlavors : fallback.drinks.vitaminFlavors,
+    },
+  };
+}
+
+function writeOrderOptionsToForm() {
+  const options = state.orderOptions || defaultOrderOptions();
+  const fieldForGroup = { rice: "[data-option-rice]", beans: "[data-option-beans]", pasta: "[data-option-pasta]", salad: "[data-option-salad]", extra: "[data-option-extra]" };
+  document.querySelector("[data-option-proteins]").value = options.meal.proteins.join("\n");
+  options.meal.groups.forEach((group) => {
+    const field = document.querySelector(fieldForGroup[group.id]);
+    if (field) field.value = group.options.join("\n");
+  });
+  document.querySelector("[data-option-juice]").value = options.drinks.juiceFlavors.join("\n");
+  document.querySelector("[data-option-vitamin]").value = options.drinks.vitaminFlavors.join("\n");
+}
+
+function readOrderOptionsFromForm() {
+  const options = defaultOrderOptions();
+  const fieldForGroup = { rice: "[data-option-rice]", beans: "[data-option-beans]", pasta: "[data-option-pasta]", salad: "[data-option-salad]", extra: "[data-option-extra]" };
+  options.meal.proteins = cleanOptionLines(document.querySelector("[data-option-proteins]").value);
+  options.meal.groups.forEach((group) => { group.options = cleanOptionLines(document.querySelector(fieldForGroup[group.id]).value); });
+  options.drinks.juiceFlavors = cleanOptionLines(document.querySelector("[data-option-juice]").value);
+  options.drinks.vitaminFlavors = cleanOptionLines(document.querySelector("[data-option-vitamin]").value);
+  return options;
+}
+
+async function saveOrderOptions() {
+  const options = readOrderOptionsFromForm();
+  const rice = options.meal.groups.find((group) => group.id === "rice");
+  if (!options.meal.proteins.length || !rice.options.length) {
+    setOptionsStatus("Preencha pelo menos uma proteína e uma opção de arroz.", true);
+    return;
+  }
+  const button = orderOptionsForm.querySelector("button[type=submit]");
+  button.disabled = true;
+  button.textContent = "Salvando opções...";
+  setOptionsStatus("");
+  const configuration = { type: "order-options", orderOptions: options };
+  let error;
+  if (state.orderOptionsProductId) {
+    ({ error } = await supabaseClient.from("products").update({ custom_config: configuration }).eq("id", state.orderOptionsProductId));
+  } else {
+    ({ error } = await supabaseClient.from("products").insert({
+      name: ORDER_OPTIONS_PRODUCT_NAME,
+      category: "Configuração interna",
+      price: 0,
+      description: "Opções editáveis de quentinha e bebidas.",
+      custom_config: configuration,
+      available: true,
+      sort_order: 999999,
+    }));
+  }
+  button.disabled = false;
+  button.textContent = "Salvar opções da quentinha e bebidas";
+  if (error) {
+    setOptionsStatus("Não foi possível salvar agora. Tente novamente.", true);
+    return;
+  }
+  state.orderOptions = options;
+  writeOrderOptionsToForm();
+  await loadProducts();
+  setOptionsStatus("Pronto! As opções já foram atualizadas no site.");
 }
 
 function filteredProducts() {
@@ -79,7 +176,11 @@ async function loadProducts() {
     setPanelStatus("Não foi possível abrir o cardápio. Confira a configuração do Supabase e o e-mail de administradora.", true);
     return;
   }
-  state.products = data.map((product) => ({ ...product, detail: product.description || "", image: product.image_url || "", available: product.available !== false }));
+  const orderOptionsProduct = data.find((product) => product.name === ORDER_OPTIONS_PRODUCT_NAME);
+  state.orderOptionsProductId = orderOptionsProduct?.id || null;
+  state.orderOptions = normaliseOrderOptions(orderOptionsProduct?.custom_config?.orderOptions);
+  state.products = data.filter((product) => product.name !== ORDER_OPTIONS_PRODUCT_NAME).map((product) => ({ ...product, detail: product.description || "", image: product.image_url || "", available: product.available !== false }));
+  writeOrderOptionsToForm();
   setPanelStatus("");
   renderProducts();
 }
@@ -260,6 +361,7 @@ resetForm.addEventListener("submit", async (event) => {
 document.querySelector("[data-product-search]").addEventListener("input", (event) => { state.search = event.target.value; renderProducts(); });
 document.querySelector("[data-category-filter]").addEventListener("change", (event) => { state.category = event.target.value; renderProducts(); });
 document.querySelector("[data-new-product]").addEventListener("click", addProduct);
+orderOptionsForm.addEventListener("submit", (event) => { event.preventDefault(); saveOrderOptions(); });
 importButton.addEventListener("click", importCurrentCatalog);
 productGrid.addEventListener("click", (event) => {
   const card = event.target.closest("[data-editor-id]");
