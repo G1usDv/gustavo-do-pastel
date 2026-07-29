@@ -46,3 +46,9 @@ body.no-scroll { overflow:hidden; }
 .cart-options { display:block; margin:5px 0 6px; color:#5d5a4c; font-size:10px; line-height:1.35; }.cart-item p { margin-top:4px; }
 @keyframes pop-in { from { opacity:0; transform:translateY(14px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 @media(max-width:620px){.category-list{margin-right:0;padding-right:0;gap:7px;}.category{flex:1 1 calc(33.333% - 7px);padding:8px 5px;justify-content:center;font-size:11px;}.product-grid{gap:8px;}.photo-slot{height:86px;}.photo-slot:before{width:70px;height:70px;}.photo-slot:after{width:94px;height:94px;}.product-body{padding:9px;}.product h3{min-height:32px;font-size:12px;}.product p{min-height:39px;font-size:9px;}.add{min-height:30px;margin-top:7px;font-size:10px;}.customizer-layer{padding:10px;align-items:flex-end;}.customizer-panel{max-height:calc(100vh - 20px);padding:19px 15px;border-radius:12px 12px 8px 8px;}.customizer-panel .cart-head h2{font-size:23px;}.option-chips{gap:7px;}.option-chips span{min-height:33px;padding:0 10px;font-size:11px;}.side-chips span{min-height:30px;font-size:10px;}}
+
+/* Fotos reais do cardápio: os demais itens continuam reservados para futuras fotos. */
+.photo-slot.has-photo { background:#e7e1d2; }
+.photo-slot.has-photo:before,.photo-slot.has-photo:after { display:none; }
+.photo-slot.has-photo img { width:100%; height:100%; display:block; object-fit:cover; transition:transform .28s ease; }
+.product:hover .photo-slot.has-photo img { transform:scale(1.045); }

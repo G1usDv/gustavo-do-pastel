@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffcf19" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Painel da loja | Gustavo do Pastel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <main class="admin-shell">
+      <section class="login-card" data-login-screen>
+        <a class="admin-brand" href="index.html" aria-label="Voltar ao cardápio">
+          <span class="brand-face" aria-hidden="true"><i></i></span>
+          <span><strong>Gustavo</strong><em>do Pastel</em></span>
+        </a>
+        <p class="eyebrow">ÁREA DA LOJA</p>
+        <h1>Controle do cardápio</h1>
+        <p class="login-copy">Entre para alterar preços, fotos e a disponibilidade dos produtos.</p>
+        <form data-login-form>
+          <label>E-mail<input type="email" autocomplete="email" required data-login-email /></label>
+          <label>Senha<input type="password" autocomplete="current-password" required data-login-password /></label>
+          <button type="submit">Entrar no painel →</button>
+        </form>
+        <button class="forgot-password" type="button" data-forgot-password>Esqueci minha senha</button>
+        <p class="form-status" data-login-status aria-live="polite"></p>
+        <a class="back-link" href="index.html">← Voltar para o cardápio</a>
+      </section>
+
+      <section class="login-card" hidden data-reset-screen>
+        <a class="admin-brand" href="index.html" aria-label="Voltar ao cardápio">
+          <span class="brand-face" aria-hidden="true"><i></i></span>
+          <span><strong>Gustavo</strong><em>do Pastel</em></span>
+        </a>
+        <p class="eyebrow">RECUPERAR ACESSO</p>
+        <h1>Crie uma nova senha</h1>
+        <p class="login-copy">Escolha uma senha nova para voltar a usar o painel.</p>
+        <form data-reset-form>
+          <label>Nova senha<input type="password" autocomplete="new-password" minlength="6" required data-new-password /></label>
+          <label>Repita a nova senha<input type="password" autocomplete="new-password" minlength="6" required data-confirm-password /></label>
+          <button type="submit">Salvar nova senha →</button>
+        </form>
+        <p class="form-status" data-reset-status aria-live="polite"></p>
+        <a class="back-link" href="admin.html">← Voltar para o login</a>
+      </section>
+
+      <section class="dashboard" hidden data-dashboard>
+        <header class="dashboard-header">
+          <a class="admin-brand" href="index.html" aria-label="Voltar ao cardápio">
+            <span class="brand-face" aria-hidden="true"><i></i></span>
+            <span><strong>Gustavo</strong><em>do Pastel</em></span>
+          </a>
+          <div class="admin-actions">
+            <a class="preview-link" href="index.html" target="_blank" rel="noreferrer">Ver cardápio ↗</a>
+            <button class="logout" type="button" data-logout>Sair</button>
+          </div>
+        </header>
+
+        <section class="dashboard-intro">
+          <div>
+            <p class="eyebrow">PAINEL DA LOJA</p>
+            <h1>Cardápio do dia</h1>
+            <p>Desmarque <b>Disponível</b> para esconder um item do site. Depois de salvar, a mudança aparece para os clientes.</p>
+          </div>
+          <div class="intro-actions">
+            <button class="secondary-button" type="button" hidden data-import-catalog>Importar cardápio atual</button>
+            <button class="primary-button" type="button" data-new-product>+ Adicionar produto</button>
+          </div>
+        </section>
+
+        <div class="tools-row">
+          <label class="product-search">⌕<input type="search" placeholder="Buscar produto" data-product-search /></label>
+          <label class="category-filter">Categoria<select data-category-filter><option value="Todos">Todas as categorias</option><option>Salgados</option><option>Lanches</option><option>Quentinhas</option><option>Bebidas</option><option>Lasanhas</option></select></label>
+        </div>
+
+        <p class="panel-status" data-panel-status aria-live="polite"></p>
+        <div class="product-edit-grid" data-admin-products></div>
+        <div class="empty-admin" hidden data-admin-empty><b>☀</b><h2>Nenhum produto por aqui</h2><p>Importe o cardápio atual ou adicione o primeiro item.</p></div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-client.js"></script>
+    <script src="catalog-data.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

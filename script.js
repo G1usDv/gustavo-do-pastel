@@ -14,41 +14,41 @@ const EXTRA_OPTIONS = [
 const JUICE_FLAVORS = ["Maracujá", "Goiaba", "Acerola", "Laranja"];
 const VITAMIN_FLAVORS = ["Banana", "Abacate", "Mamão"];
 
-const products = [
-  ["Pastel de Frango", "Salgados", 3, "Crocante e feito na hora", "Favorito"],
-  ["Pastel de Frango com Catupiry", "Salgados", 3, "Recheio cremoso"],
-  ["Pastel de Calabresa com Queijo", "Salgados", 3, "Sabor marcante"],
-  ["Pastel de Queijo", "Salgados", 3, "Queijo derretendo"],
-  ["Pastel Misto", "Salgados", 3, "Presunto e queijo"],
-  ["Pastel de Bacon com Queijo", "Salgados", 3, "Bem recheado"],
-  ["Pastel de Charque com Queijo", "Salgados", 3, "Sabor nordestino"],
-  ["Pastel de Carne", "Salgados", 3, "Carne bem temperada"],
-  ["Pastel Romeu e Julieta", "Salgados", 3, "Queijo e goiabada"],
-  ["Coxinha de Frango", "Salgados", 3, "Massa macia e crocante"],
-  ["Coxinha de Carne", "Salgados", 3, "Recheio caseiro"],
-  ["Enroladinho de Salsicha", "Salgados", 3, "Perfeito para o lanche"],
-  ["Cachorro-Quente", "Lanches", 10, "Lanche completo"],
-  ["Hambúrguer", "Lanches", 8, "Feito com carinho"],
-  ["Eggs", "Lanches", 12, "Para matar a fome"],
-  ["X-Frango", "Lanches", 13, "Frango saboroso"],
-  ["Misto Quente", "Lanches", 7, "Clássico e quentinho"],
-  ["Pão com Ovo", "Lanches", 6, "Simples e gostoso"],
-  ["Sanduíche Natural", "Lanches", 6, "Leve e fresquinho"],
-  ["Pão com Manteiga", "Lanches", 4, "Na chapa"],
-  ["Quentinha · 1 proteína", "Quentinhas", 15, "Escolha proteína e acompanhamentos", "Almoço", { type: "meal", proteinCount: 1 }],
-  ["Quentinha · 2 proteínas", "Quentinhas", 20, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 2 }],
-  ["Quentinha · 3 proteínas", "Quentinhas", 25, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 3 }],
-  ["Suco · 400 ml", "Bebidas", 5, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }],
-  ["Suco · 500 ml", "Bebidas", 6, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }],
-  ["Suco · 1 litro", "Bebidas", 12, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }],
-  ["Vitamina · 500 ml", "Bebidas", 7, "Escolha seu sabor", null, { type: "flavor", flavors: VITAMIN_FLAVORS, label: "sabor da vitamina" }],
-  ["Lasanha Bolonhesa · 250 g", "Lasanhas", 10, "Carne bovina e massa artesanal", "Caseira"],
-  ["Lasanha Bolonhesa · 500 g", "Lasanhas", 20, "Carne bovina e massa artesanal"],
-  ["Lasanha Bolonhesa · 750 g", "Lasanhas", 25, "Carne bovina e massa artesanal"],
-  ["Lasanha de Frango · 250 g", "Lasanhas", 9, "Frango e massa artesanal"],
-  ["Lasanha de Frango · 500 g", "Lasanhas", 18, "Frango e massa artesanal"],
-  ["Lasanha de Frango · 750 g", "Lasanhas", 23, "Frango e massa artesanal"],
-].map(([name, category, price, detail, badge, custom], id) => ({ id, name, category, price, detail, badge, custom }));
+let products = [
+  ["Pastel de Frango", "Salgados", 3, "Crocante e feito na hora", "Favorito", null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Frango com Catupiry", "Salgados", 3, "Recheio cremoso", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Calabresa com Queijo", "Salgados", 3, "Sabor marcante", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Queijo", "Salgados", 3, "Queijo derretendo", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel Misto", "Salgados", 3, "Presunto e queijo", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Bacon com Queijo", "Salgados", 3, "Bem recheado", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Charque com Queijo", "Salgados", 3, "Sabor nordestino", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel de Carne", "Salgados", 3, "Carne bem temperada", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Pastel Romeu e Julieta", "Salgados", 3, "Queijo e goiabada", null, null, "assets/products/pastel-autoral.jpg"],
+  ["Coxinha de Frango", "Salgados", 3, "Massa macia e crocante", null, null, "assets/products/coxinha-autoral.jpg"],
+  ["Coxinha de Carne", "Salgados", 3, "Recheio caseiro", null, null, "assets/products/coxinha-autoral.jpg"],
+  ["Enroladinho de Salsicha", "Salgados", 3, "Perfeito para o lanche", null, null, "assets/products/stock-pastel.jpg"],
+  ["Cachorro-Quente", "Lanches", 10, "Lanche completo", null, null, "assets/products/cachorro-quente.jpg"],
+  ["Hambúrguer", "Lanches", 8, "Feito com carinho", null, null, "assets/products/hamburguer-autoral.jpg"],
+  ["Eggs", "Lanches", 12, "Para matar a fome", null, null, "assets/products/hamburguer-autoral.jpg"],
+  ["X-Frango", "Lanches", 13, "Frango saboroso", null, null, "assets/products/x-egg.jpg"],
+  ["Misto Quente", "Lanches", 7, "Clássico e quentinho", null, null, "assets/products/stock-misto.jpg"],
+  ["Pão com Ovo", "Lanches", 6, "Simples e gostoso", null, null, "assets/products/x-egg.jpg"],
+  ["Sanduíche Natural", "Lanches", 6, "Leve e fresquinho", null, null, "assets/products/stock-natural.jpg"],
+  ["Pão com Manteiga", "Lanches", 4, "Na chapa", null, null, "assets/products/stock-misto.jpg"],
+  ["Quentinha · 1 proteína", "Quentinhas", 15, "Escolha proteína e acompanhamentos", "Almoço", { type: "meal", proteinCount: 1 }, "assets/products/quentinha-frango.jpg"],
+  ["Quentinha · 2 proteínas", "Quentinhas", 20, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 2 }, "assets/products/quentinha-frango.jpg"],
+  ["Quentinha · 3 proteínas", "Quentinhas", 25, "Escolha proteínas e acompanhamentos", null, { type: "meal", proteinCount: 3 }, "assets/products/quentinha-calabresa.jpg"],
+  ["Suco · 400 ml", "Bebidas", 5, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Suco · 500 ml", "Bebidas", 6, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Suco · 1 litro", "Bebidas", 12, "Escolha seu sabor", null, { type: "flavor", flavors: JUICE_FLAVORS, label: "sabor do suco" }, "assets/products/stock-juice.jpg"],
+  ["Vitamina · 500 ml", "Bebidas", 7, "Escolha seu sabor", null, { type: "flavor", flavors: VITAMIN_FLAVORS, label: "sabor da vitamina" }, "assets/products/stock-vitamina.jpg"],
+  ["Lasanha Bolonhesa · 250 g", "Lasanhas", 10, "Carne bovina e massa artesanal", "Caseira", null, "assets/products/stock-lasanha.jpg"],
+  ["Lasanha Bolonhesa · 500 g", "Lasanhas", 20, "Carne bovina e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
+  ["Lasanha Bolonhesa · 750 g", "Lasanhas", 25, "Carne bovina e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
+  ["Lasanha de Frango · 250 g", "Lasanhas", 9, "Frango e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
+  ["Lasanha de Frango · 500 g", "Lasanhas", 18, "Frango e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
+  ["Lasanha de Frango · 750 g", "Lasanhas", 23, "Frango e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
+].map(([name, category, price, detail, badge, custom, image], id) => ({ id, name, category, price, detail, badge, custom, image }));
 
 const state = { category: "Todos", search: "", cart: [], customProduct: null, customProteinCounts: {} };
 const grid = document.querySelector("[data-product-grid]");
@@ -66,7 +66,7 @@ const customTitle = document.querySelector("[data-custom-title]");
 const customContent = document.querySelector("[data-custom-content]");
 
 const money = (value) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const productById = (id) => products.find((product) => product.id === Number(id));
+const productById = (id) => products.find((product) => String(product.id) === String(id));
 const selectedValues = (selector) => [...customizer.querySelectorAll(selector)].filter((input) => input.checked).map((input) => input.value);
 
 function filteredProducts() {
@@ -78,9 +78,9 @@ function renderProducts() {
   const selected = filteredProducts();
   grid.innerHTML = selected.map((product) => `
     <article class="product">
-      <div class="photo-slot" data-category="${product.category}">
+      <div class="photo-slot ${product.image ? "has-photo" : ""}" data-category="${product.category}">
+        ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy" decoding="async">` : "<span>+ foto em breve</span>"}
         ${product.badge ? `<span class="badge">${product.badge}</span>` : ""}
-        <span>+ foto em breve</span>
       </div>
       <div class="product-body">
         <div class="product-top"><small>${product.category}</small><b>${money(product.price)}</b></div>
@@ -197,6 +197,36 @@ function showCustomizerError(message) {
   customizer.querySelector("[data-custom-error]").textContent = message;
 }
 
+function databaseProductToCatalog(product) {
+  return {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: Number(product.price),
+    detail: product.description || "",
+    badge: product.badge || null,
+    custom: product.custom_config || null,
+    image: product.image_url || null,
+  };
+}
+
+async function loadCatalogFromSupabase() {
+  if (!window.supabaseClient) return;
+  const { data, error } = await window.supabaseClient
+    .from("products")
+    .select("id, name, category, price, description, badge, custom_config, image_url")
+    .eq("available", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.warn("Não foi possível carregar o cardápio online.", error.message);
+    return;
+  }
+  if (!data.length) return;
+  products = data.map(databaseProductToCatalog);
+  renderProducts();
+}
+
 document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => {
   state.category = button.dataset.category;
   document.querySelectorAll("[data-category]").forEach((item) => item.classList.toggle("active", item === button));
@@ -284,3 +314,4 @@ sendButton.addEventListener("click", () => {
 
 renderProducts();
 renderCart();
+loadCatalogFromSupabase();
