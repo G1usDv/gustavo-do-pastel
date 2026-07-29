@@ -73,6 +73,15 @@
           </div>
         </section>
 
+        <section class="store-status-card">
+          <div>
+            <p class="eyebrow">STATUS DA LOJA</p>
+            <h2 data-store-state>Loja aberta para pedidos</h2>
+            <p data-store-status>Os clientes podem montar o pedido e enviar pelo WhatsApp.</p>
+          </div>
+          <label class="store-switch"><input type="checkbox" data-store-open checked><span></span><b>Receber pedidos</b></label>
+        </section>
+
         <section class="orders-card" data-orders-card>
           <div class="orders-heading">
             <div>
@@ -94,6 +103,13 @@
           <p class="orders-status" data-orders-status aria-live="polite"></p>
           <div class="orders-list" data-orders-list></div>
           <div class="empty-orders" hidden data-orders-empty><b>☀</b><h3>Nenhum pedido ainda</h3><p>Quando alguém finalizar pelo WhatsApp, o pedido aparecerá aqui como pendente.</p></div>
+        </section>
+
+        <section class="reviews-card">
+          <div class="reviews-heading"><div><p class="eyebrow">OPINIÃO DOS CLIENTES</p><h2>Avaliações recebidas</h2></div><button class="secondary-button" type="button" data-refresh-reviews>Atualizar</button></div>
+          <p class="reviews-status" data-reviews-status aria-live="polite"></p>
+          <div class="admin-reviews-list" data-admin-reviews></div>
+          <div class="empty-reviews" hidden data-admin-reviews-empty><p>Ainda não há avaliações.</p></div>
         </section>
 
         <section class="order-options-card" data-order-options-card>
@@ -143,6 +159,6 @@
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
     <script src="catalog-data.js"></script>
-    <script src="admin.js?v=20260729c"></script>
+    <script src="admin.js?v=20260729d"></script>
   </body>
 </html>

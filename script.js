@@ -56,7 +56,7 @@ let products = [
   ["Lasanha de Frango · 750 g", "Lasanhas", 23, "Frango e massa artesanal", null, null, "assets/products/stock-lasanha.jpg"],
 ].map(([name, category, price, detail, badge, custom, image], id) => ({ id, name, category, price, detail, badge, custom, image }));
 
-const state = { category: "Todos", search: "", cart: [], customProduct: null, customProteinCounts: {} };
+const state = { category: "Todos", search: "", cart: [], customProduct: null, customProteinCounts: {}, storeOpen: true, reviewRating: 0 };
 const grid = document.querySelector("[data-product-grid]");
 const empty = document.querySelector("[data-empty]");
 const tip = document.querySelector("[data-menu-tip]");
@@ -70,6 +70,12 @@ const phoneNote = document.querySelector("[data-phone-note]");
 const customizer = document.querySelector("[data-customizer]");
 const customTitle = document.querySelector("[data-custom-title]");
 const customContent = document.querySelector("[data-custom-content]");
+const storeClosedBanner = document.querySelector("[data-store-closed]");
+const orderSendStatus = document.querySelector("[data-order-send-status]");
+const reviewForm = document.querySelector("[data-review-form]");
+const reviewStatus = document.querySelector("[data-review-status]");
+const ratingCopy = document.querySelector("[data-rating-copy]");
+const starPicker = document.querySelector("[data-star-picker]");
 
 const money = (value) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const productById = (id) => products.find((product) => String(product.id) === String(id));
@@ -91,11 +97,12 @@ function renderProducts() {
       <div class="product-body">
         <div class="product-top"><small>${product.category}</small><b>${money(product.price)}</b></div>
         <h3>${product.name}</h3><p>${product.detail}</p>
-        <button class="add ${product.custom ? "choose" : ""}" type="button" aria-label="${product.custom ? `Escolher opções de ${product.name}` : `Adicionar ${product.name}`}" ${product.custom ? `data-custom="${product.id}"` : `data-add="${product.id}"`}>
-          ${product.custom ? "Escolher opções" : "Adicionar"} <span>${product.custom ? "→" : "+"}</span>
+        <button class="add ${product.custom ? "choose" : ""}" type="button" aria-label="${state.storeOpen ? (product.custom ? `Escolher opções de ${product.name}` : `Adicionar ${product.name}`) : "Loja fechada no momento"}" ${state.storeOpen ? (product.custom ? `data-custom="${product.id}"` : `data-add="${product.id}"`) : "disabled"}>
+          ${state.storeOpen ? (product.custom ? "Escolher opções" : "Adicionar") : "Loja fechada"} <span>${state.storeOpen ? (product.custom ? "→" : "+") : ""}</span>
         </button>
       </div>
     </article>`).join("");
+  storeClosedBanner.hidden = state.storeOpen;
   empty.hidden = selected.length > 0;
   const tips = {
     Todos: "Todos os salgados por apenas <b>R$ 3,00</b> cada.",
@@ -107,6 +114,7 @@ function renderProducts() {
 }
 
 function addToCart(product, options = []) {
+  if (!state.storeOpen) return;
   const cartId = `${product.id}:${options.join("|")}`;
   const item = state.cart.find((cartItem) => cartItem.cartId === cartId);
   if (item) item.quantity += 1;
@@ -131,6 +139,8 @@ function renderCart() {
   cartNote.hidden = count === 0;
   totalRow.hidden = count === 0;
   sendButton.hidden = count === 0;
+  sendButton.disabled = !state.storeOpen;
+  sendButton.textContent = state.storeOpen ? "Finalizar pelo WhatsApp ↗" : "A loja está fechada agora";
   phoneNote.hidden = count === 0 || Boolean(WHATSAPP_NUMBER);
   cartItems.innerHTML = state.cart.map((item) => `
     <div class="cart-item"><div><h3>${item.name}</h3>${item.options.length ? `<small class="cart-options">${item.options.join("<br>")}</small>` : ""}<p>${money(item.price)} cada</p>
@@ -162,6 +172,7 @@ function renderMealGroup(group, index) {
 }
 
 function openCustomizer(product) {
+  if (!state.storeOpen) return;
   state.customProduct = product;
   customTitle.textContent = product.name;
   const custom = product.custom || {};
@@ -244,6 +255,7 @@ async function loadCatalogFromSupabase() {
   }
   const orderOptionsProduct = data.find((product) => product.name === ORDER_OPTIONS_PRODUCT_NAME);
   applySavedOrderOptions(orderOptionsProduct?.custom_config?.orderOptions);
+  applySavedStoreSettings(orderOptionsProduct?.custom_config?.store);
   const catalogProducts = data.filter((product) => product.name !== ORDER_OPTIONS_PRODUCT_NAME);
   if (!catalogProducts.length) return;
   products = catalogProducts.map(databaseProductToCatalog);
@@ -267,6 +279,10 @@ function applySavedOrderOptions(saved) {
       vitaminFlavors: Array.isArray(saved?.drinks?.vitaminFlavors) ? saved.drinks.vitaminFlavors : fallback.drinks.vitaminFlavors,
     },
   };
+}
+
+function applySavedStoreSettings(saved) {
+  state.storeOpen = saved?.open !== false;
 }
 
 document.querySelectorAll("[data-category]").forEach((button) => button.addEventListener("click", () => {
@@ -328,6 +344,11 @@ function orderNumber(order) {
   return `#${String(order?.id || 0).padStart(4, "0")}`;
 }
 
+function setOrderSendStatus(message = "", isError = false) {
+  orderSendStatus.textContent = message;
+  orderSendStatus.style.color = isError ? "#b23e29" : "#258b48";
+}
+
 function orderItemsForDatabase() {
   return state.cart.map((item) => ({
     product_id: String(item.id),
@@ -351,23 +372,7 @@ async function createOrderRecord(note, total) {
   return Array.isArray(data) ? data[0] : data;
 }
 
-sendButton.addEventListener("click", async () => {
-  if (!state.cart.length || sendButton.disabled) return;
-  const note = document.querySelector("[data-note]").value.trim();
-  const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const originalLabel = sendButton.textContent;
-  sendButton.disabled = true;
-  sendButton.textContent = "Registrando pedido...";
-  let order;
-  try {
-    order = await createOrderRecord(note, total);
-  } catch (error) {
-    console.error("Não foi possível registrar o pedido.", error);
-    window.alert("Não conseguimos registrar o pedido agora. Tente novamente em instantes.");
-    sendButton.disabled = false;
-    sendButton.textContent = originalLabel;
-    return;
-  }
+function buildWhatsAppMessage(note, total, order) {
   const categories = [
     ["Salgados", "*SALGADOS*"],
     ["Lanches", "*LANCHES*"],
@@ -375,7 +380,7 @@ sendButton.addEventListener("click", async () => {
     ["Bebidas", "*BEBIDAS*"],
     ["Lasanhas", "*LASANHAS*"],
   ];
-  const messageLines = [`Olá! Gostaria de fazer o pedido ${orderNumber(order)}:`, ""];
+  const messageLines = [order ? `Olá! Gostaria de fazer o pedido ${orderNumber(order)}:` : "Olá! Gostaria de fazer este pedido:", ""];
   categories.forEach(([category, title]) => {
     const items = state.cart.filter((item) => item.category === category);
     if (!items.length) return;
@@ -388,10 +393,85 @@ sendButton.addEventListener("click", async () => {
   });
   if (note) messageLines.push("*OBSERVAÇÕES*", note, "");
   messageLines.push(`*TOTAL: ${money(total)}*`, "", "Pode me confirmar, por favor?");
-  const message = messageLines.join("\n");
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  return messageLines.join("\n");
+}
+
+function openWhatsApp(message) {
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+  if (!newWindow) window.location.assign(url);
+}
+
+function setReviewStatus(message = "", isError = false) {
+  reviewStatus.textContent = message;
+  reviewStatus.style.color = isError ? "#b23e29" : "#258b48";
+}
+
+function setReviewRating(rating) {
+  state.reviewRating = rating;
+  [...starPicker.querySelectorAll("[data-rating]")].forEach((button) => {
+    const selected = Number(button.dataset.rating) <= rating;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+  ratingCopy.textContent = rating ? `${rating} ${rating === 1 ? "estrela selecionada" : "estrelas selecionadas"}` : "Nenhuma estrela selecionada";
+}
+
+starPicker.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-rating]");
+  if (button) setReviewRating(Number(button.dataset.rating));
+});
+
+reviewForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const message = document.querySelector("[data-review-message]").value.trim();
+  if (!state.reviewRating) {
+    setReviewStatus("Escolha uma nota de 1 a 5 estrelas.", true);
+    return;
+  }
+  const button = reviewForm.querySelector("[data-send-review]");
+  button.disabled = true;
+  button.textContent = "Enviando avaliação...";
+  setReviewStatus("");
+  try {
+    if (!window.supabaseClient) throw new Error("Avaliações não configuradas.");
+    const { error } = await window.supabaseClient.rpc("create_store_review", { review_rating: state.reviewRating, review_message: message });
+    if (error) throw error;
+    document.querySelector("[data-review-message]").value = "";
+    setReviewRating(0);
+    setReviewStatus("Obrigado! Sua avaliação foi enviada para a loja.");
+  } catch (error) {
+    console.error("Não foi possível enviar a avaliação.", error);
+    setReviewStatus("Não foi possível enviar agora. Tente novamente em instantes.", true);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Enviar avaliação";
+  }
+});
+
+sendButton.addEventListener("click", async () => {
+  if (!state.cart.length || sendButton.disabled) return;
+  if (!state.storeOpen) {
+    setOrderSendStatus("A loja está fechada agora. Volte em breve para fazer seu pedido.", true);
+    return;
+  }
+  const note = document.querySelector("[data-note]").value.trim();
+  const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const originalLabel = sendButton.textContent;
+  sendButton.disabled = true;
+  sendButton.textContent = "Registrando pedido...";
+  setOrderSendStatus("Preparando seu pedido...");
+  let order;
+  try {
+    order = await createOrderRecord(note, total);
+  } catch (error) {
+    console.error("Não foi possível registrar o pedido.", error);
+    setOrderSendStatus("O pedido foi aberto no WhatsApp, mas não apareceu automaticamente no painel. Se necessário, envie a mensagem novamente.", true);
+  }
+  openWhatsApp(buildWhatsAppMessage(note, total, order));
   sendButton.disabled = false;
   sendButton.textContent = originalLabel;
+  if (order) setOrderSendStatus(`Pedido ${orderNumber(order)} registrado. Abrindo o WhatsApp...`);
 });
 
 renderProducts();

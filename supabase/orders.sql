@@ -49,3 +49,6 @@ end;
 $$;
 
 grant execute on function public.create_store_order(jsonb, numeric, text) to anon, authenticated;
+
+-- Atualiza imediatamente o cache da API após criar a função de pedidos.
+notify pgrst, 'reload schema';

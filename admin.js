@@ -1,5 +1,5 @@
 const supabaseClient = window.supabaseClient;
-const state = { products: [], search: "", category: "Todos", orderOptions: null, orders: [], orderFilter: "all" };
+const state = { products: [], search: "", category: "Todos", orderOptions: null, orders: [], orderFilter: "all", store: { open: true }, reviews: [] };
 const loginScreen = document.querySelector("[data-login-screen]");
 const resetScreen = document.querySelector("[data-reset-screen]");
 const dashboard = document.querySelector("[data-dashboard]");
@@ -19,6 +19,13 @@ const ordersEmpty = document.querySelector("[data-orders-empty]");
 const ordersStatus = document.querySelector("[data-orders-status]");
 const ordersWeek = document.querySelector("[data-orders-week]");
 const orderFilter = document.querySelector("[data-order-filter]");
+const storeOpenInput = document.querySelector("[data-store-open]");
+const storeState = document.querySelector("[data-store-state]");
+const storeStatus = document.querySelector("[data-store-status]");
+const storeStatusCard = document.querySelector(".store-status-card");
+const adminReviewsList = document.querySelector("[data-admin-reviews]");
+const adminReviewsEmpty = document.querySelector("[data-admin-reviews-empty]");
+const reviewsStatus = document.querySelector("[data-reviews-status]");
 let orderRefreshTimer;
 const defaultOrderOptions = () => JSON.parse(JSON.stringify(window.GUSTAVO_CATALOG.orderOptions));
 const ORDER_OPTIONS_PRODUCT_NAME = "__GUSTAVO_ORDER_OPTIONS__";
@@ -81,6 +88,22 @@ function normaliseOrderOptions(value) {
   };
 }
 
+function normaliseStoreSettings(value) {
+  return { open: value?.open !== false };
+}
+
+function storeConfiguration(options = state.orderOptions || defaultOrderOptions(), store = state.store) {
+  return { type: "order-options", orderOptions: options, store: { open: store.open !== false } };
+}
+
+function writeStoreSettings() {
+  const isOpen = state.store.open !== false;
+  storeOpenInput.checked = isOpen;
+  storeState.textContent = isOpen ? "Loja aberta para pedidos" : "Loja fechada para pedidos";
+  storeStatus.textContent = isOpen ? "Os clientes podem montar o pedido e enviar pelo WhatsApp." : "O cardápio continua visível, mas os clientes não conseguem enviar pedidos.";
+  storeStatusCard.classList.toggle("is-closed", !isOpen);
+}
+
 function writeOrderOptionsToForm() {
   const options = state.orderOptions || defaultOrderOptions();
   const fieldForGroup = { rice: "[data-option-rice]", beans: "[data-option-beans]", pasta: "[data-option-pasta]", salad: "[data-option-salad]", extra: "[data-option-extra]" };
@@ -114,7 +137,20 @@ async function saveOrderOptions() {
   button.disabled = true;
   button.textContent = "Salvando opções...";
   setOptionsStatus("");
-  const configuration = { type: "order-options", orderOptions: options };
+  const error = await persistStoreConfiguration(storeConfiguration(options));
+  button.disabled = false;
+  button.textContent = "Salvar opções da quentinha e bebidas";
+  if (error) {
+    setOptionsStatus("Não foi possível salvar agora. Tente novamente.", true);
+    return;
+  }
+  state.orderOptions = options;
+  writeOrderOptionsToForm();
+  await loadProducts();
+  setOptionsStatus("Pronto! As opções já foram atualizadas no site.");
+}
+
+async function persistStoreConfiguration(configuration) {
   let error;
   if (state.orderOptionsProductId) {
     ({ error } = await supabaseClient.from("products").update({ custom_config: configuration }).eq("id", state.orderOptionsProductId));
@@ -129,16 +165,24 @@ async function saveOrderOptions() {
       sort_order: 999999,
     }));
   }
-  button.disabled = false;
-  button.textContent = "Salvar opções da quentinha e bebidas";
+  return error;
+}
+
+async function saveStoreOpen() {
+  const previous = state.store.open;
+  const open = storeOpenInput.checked;
+  state.store.open = open;
+  writeStoreSettings();
+  storeStatus.textContent = "Atualizando a loja no site...";
+  const error = await persistStoreConfiguration(storeConfiguration());
   if (error) {
-    setOptionsStatus("Não foi possível salvar agora. Tente novamente.", true);
+    state.store.open = previous;
+    writeStoreSettings();
+    storeStatus.textContent = "Não foi possível alterar o status agora. Tente novamente.";
     return;
   }
-  state.orderOptions = options;
-  writeOrderOptionsToForm();
   await loadProducts();
-  setOptionsStatus("Pronto! As opções já foram atualizadas no site.");
+  storeStatus.textContent = open ? "Loja aberta: os clientes já podem enviar pedidos." : "Loja fechada: os pedidos foram pausados no site.";
 }
 
 function filteredProducts() {
@@ -190,8 +234,10 @@ async function loadProducts() {
   const orderOptionsProduct = data.find((product) => product.name === ORDER_OPTIONS_PRODUCT_NAME);
   state.orderOptionsProductId = orderOptionsProduct?.id || null;
   state.orderOptions = normaliseOrderOptions(orderOptionsProduct?.custom_config?.orderOptions);
+  state.store = normaliseStoreSettings(orderOptionsProduct?.custom_config?.store);
   state.products = data.filter((product) => product.name !== ORDER_OPTIONS_PRODUCT_NAME).map((product) => ({ ...product, detail: product.description || "", image: product.image_url || "", available: product.available !== false }));
   writeOrderOptionsToForm();
+  writeStoreSettings();
   setPanelStatus("");
   renderProducts();
 }
@@ -270,6 +316,32 @@ async function loadOrders(showStatus = true) {
   state.orders = data || [];
   renderOrders();
   setOrdersStatus(state.orders.length ? "" : "Ainda não há pedidos registrados.");
+}
+
+function setReviewsStatus(message = "", isError = false) {
+  reviewsStatus.textContent = message;
+  reviewsStatus.style.color = isError ? "#b23e29" : "#68665d";
+}
+
+function renderReviews() {
+  adminReviewsList.innerHTML = state.reviews.map((review) => {
+    const rating = Math.min(5, Math.max(1, Number(review.rating) || 1));
+    return `<article class="admin-review"><div class="admin-review-top"><b class="admin-review-stars" aria-label="${rating} estrelas">${"★".repeat(rating)}${"☆".repeat(5 - rating)}</b><time>${orderDate(review.created_at)}</time></div>${review.message ? `<p>${escapeHtml(review.message)}</p>` : "<p>Sem mensagem.</p>"}</article>`;
+  }).join("");
+  adminReviewsEmpty.hidden = state.reviews.length > 0;
+}
+
+async function loadReviews(showStatus = true) {
+  if (!supabaseClient) return;
+  if (showStatus) setReviewsStatus("Carregando avaliações...");
+  const { data, error } = await supabaseClient.from("reviews").select("id, rating, message, created_at").order("created_at", { ascending: false }).limit(40);
+  if (error) {
+    setReviewsStatus("Não foi possível carregar as avaliações agora.", true);
+    return;
+  }
+  state.reviews = data || [];
+  renderReviews();
+  setReviewsStatus(state.reviews.length ? "" : "Ainda não há avaliações recebidas.");
 }
 
 async function updateOrderStatus(id, status) {
@@ -399,8 +471,8 @@ async function showDashboard() {
   loginScreen.hidden = true;
   resetScreen.hidden = true;
   dashboard.hidden = false;
-  await Promise.all([loadProducts(), loadOrders()]);
-  if (!orderRefreshTimer) orderRefreshTimer = window.setInterval(() => { loadOrders(false); }, 30000);
+  await Promise.all([loadProducts(), loadOrders(), loadReviews()]);
+  if (!orderRefreshTimer) orderRefreshTimer = window.setInterval(() => { loadOrders(false); loadReviews(false); }, 30000);
 }
 
 function isPasswordRecovery() {
@@ -468,8 +540,10 @@ document.querySelector("[data-category-filter]").addEventListener("change", (eve
 document.querySelector("[data-new-product]").addEventListener("click", addProduct);
 orderOptionsForm.addEventListener("submit", (event) => { event.preventDefault(); saveOrderOptions(); });
 importButton.addEventListener("click", importCurrentCatalog);
+storeOpenInput.addEventListener("change", saveStoreOpen);
 orderFilter.addEventListener("change", (event) => { state.orderFilter = event.target.value; renderOrders(); });
 document.querySelector("[data-refresh-orders]").addEventListener("click", () => { loadOrders(); });
+document.querySelector("[data-refresh-reviews]").addEventListener("click", () => { loadReviews(); });
 ordersList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-order-action]");
   if (button) updateOrderStatus(button.dataset.orderId, button.dataset.orderAction);

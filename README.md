@@ -30,6 +30,10 @@ Antes de abrir o WhatsApp, o site registra um pedido como **Pendente**. No topo 
 
 Para ativar esta parte, execute uma única vez o arquivo `supabase/orders.sql` no **SQL Editor** do Supabase. Esse registro guarda somente número, itens, total, observação e status do pedido — não guarda nome nem telefone do cliente.
 
+### Loja aberta, avaliações e entrega
+
+No topo do painel há a chave **Receber pedidos**. Ao desativá-la, o cardápio segue visível, mas o cliente vê que a loja está fechada e não consegue finalizar um pedido. A página inicial também traz o aviso de entrega combinada pelo WhatsApp e uma área de avaliação de 1 a 5 estrelas com mensagem. As avaliações aparecem no painel e exigem a execução única de `supabase/reviews.sql` no **SQL Editor** do Supabase.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório chamado `gustavo-do-pastel`.
