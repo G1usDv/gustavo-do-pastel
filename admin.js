@@ -37,6 +37,7 @@ const ORDER_STATUS = {
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
 const moneyInput = (value) => Number(value || 0).toFixed(2).replace(".", ",");
+const money = (value) => Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const productIsNew = (product) => String(product.id).startsWith("new-");
 const productForDatabase = (product, index) => ({
   name: product.name.trim(),
