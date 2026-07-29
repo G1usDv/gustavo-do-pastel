@@ -324,9 +324,50 @@ customizer.addEventListener("click", (event) => {
   closeCustomizer();
 });
 
-sendButton.addEventListener("click", () => {
+function orderNumber(order) {
+  return `#${String(order?.id || 0).padStart(4, "0")}`;
+}
+
+function orderItemsForDatabase() {
+  return state.cart.map((item) => ({
+    product_id: String(item.id),
+    name: item.name,
+    category: item.category,
+    quantity: item.quantity,
+    unit_price: Number(item.price),
+    subtotal: Number(item.price * item.quantity),
+    options: item.options,
+  }));
+}
+
+async function createOrderRecord(note, total) {
+  if (!window.supabaseClient) throw new Error("O registro de pedidos ainda não está configurado.");
+  const { data, error } = await window.supabaseClient.rpc("create_store_order", {
+    order_items: orderItemsForDatabase(),
+    order_total: total,
+    order_note: note,
+  });
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] : data;
+}
+
+sendButton.addEventListener("click", async () => {
+  if (!state.cart.length || sendButton.disabled) return;
   const note = document.querySelector("[data-note]").value.trim();
   const total = state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const originalLabel = sendButton.textContent;
+  sendButton.disabled = true;
+  sendButton.textContent = "Registrando pedido...";
+  let order;
+  try {
+    order = await createOrderRecord(note, total);
+  } catch (error) {
+    console.error("Não foi possível registrar o pedido.", error);
+    window.alert("Não conseguimos registrar o pedido agora. Tente novamente em instantes.");
+    sendButton.disabled = false;
+    sendButton.textContent = originalLabel;
+    return;
+  }
   const categories = [
     ["Salgados", "*SALGADOS*"],
     ["Lanches", "*LANCHES*"],
@@ -334,7 +375,7 @@ sendButton.addEventListener("click", () => {
     ["Bebidas", "*BEBIDAS*"],
     ["Lasanhas", "*LASANHAS*"],
   ];
-  const messageLines = ["Olá! Gostaria de fazer este pedido:", ""];
+  const messageLines = [`Olá! Gostaria de fazer o pedido ${orderNumber(order)}:`, ""];
   categories.forEach(([category, title]) => {
     const items = state.cart.filter((item) => item.category === category);
     if (!items.length) return;
@@ -349,6 +390,8 @@ sendButton.addEventListener("click", () => {
   messageLines.push(`*TOTAL: ${money(total)}*`, "", "Pode me confirmar, por favor?");
   const message = messageLines.join("\n");
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  sendButton.disabled = false;
+  sendButton.textContent = originalLabel;
 });
 
 renderProducts();

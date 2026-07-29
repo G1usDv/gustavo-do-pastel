@@ -24,6 +24,12 @@ Depois do primeiro acesso, basta clicar em **Importar cardápio atual** uma úni
 
 No topo do painel existe a área **Quentinha e bebidas**. Basta escrever uma opção por linha e salvar para atualizar as proteínas, acompanhamentos, saladas, extras e sabores que o cliente pode escolher.
 
+### Pedidos e resumo semanal
+
+Antes de abrir o WhatsApp, o site registra um pedido como **Pendente**. No topo do painel, a loja pode marcar cada pedido como **Concluído** ou **Não concluído**. O resumo da semana soma somente os pedidos concluídos e mostra também os pedidos ainda pendentes. Os pedidos antigos continuam salvos para consulta; o resumo apenas muda de semana automaticamente.
+
+Para ativar esta parte, execute uma única vez o arquivo `supabase/orders.sql` no **SQL Editor** do Supabase. Esse registro guarda somente número, itens, total, observação e status do pedido — não guarda nome nem telefone do cliente.
+
 ## Publicar no GitHub Pages
 
 1. Crie um repositório chamado `gustavo-do-pastel`.

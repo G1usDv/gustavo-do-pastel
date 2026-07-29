@@ -1,5 +1,5 @@
 const supabaseClient = window.supabaseClient;
-const state = { products: [], search: "", category: "Todos", orderOptions: null };
+const state = { products: [], search: "", category: "Todos", orderOptions: null, orders: [], orderFilter: "all" };
 const loginScreen = document.querySelector("[data-login-screen]");
 const resetScreen = document.querySelector("[data-reset-screen]");
 const dashboard = document.querySelector("[data-dashboard]");
@@ -14,8 +14,19 @@ const importButton = document.querySelector("[data-import-catalog]");
 const categoryOptions = ["Salgados", "Lanches", "Quentinhas", "Bebidas", "Lasanhas"];
 const orderOptionsForm = document.querySelector("[data-order-options-form]");
 const orderOptionsStatus = document.querySelector("[data-options-status]");
+const ordersList = document.querySelector("[data-orders-list]");
+const ordersEmpty = document.querySelector("[data-orders-empty]");
+const ordersStatus = document.querySelector("[data-orders-status]");
+const ordersWeek = document.querySelector("[data-orders-week]");
+const orderFilter = document.querySelector("[data-order-filter]");
+let orderRefreshTimer;
 const defaultOrderOptions = () => JSON.parse(JSON.stringify(window.GUSTAVO_CATALOG.orderOptions));
 const ORDER_OPTIONS_PRODUCT_NAME = "__GUSTAVO_ORDER_OPTIONS__";
+const ORDER_STATUS = {
+  pending: { label: "Pendente", className: "pending" },
+  completed: { label: "Concluído", className: "completed" },
+  not_completed: { label: "Não concluído", className: "not-completed" },
+};
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#039;", '"': "&quot;" }[character]));
 const moneyInput = (value) => Number(value || 0).toFixed(2).replace(".", ",");
@@ -185,6 +196,99 @@ async function loadProducts() {
   renderProducts();
 }
 
+function setOrdersStatus(message = "", isError = false) {
+  ordersStatus.textContent = message;
+  ordersStatus.style.color = isError ? "#b23e29" : "#68665d";
+}
+
+function orderNumber(order) {
+  return `#${String(order?.id || 0).padStart(4, "0")}`;
+}
+
+function orderDate(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+}
+
+function currentWeekBounds() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  return { start, end };
+}
+
+function renderWeeklySummary() {
+  const { start, end } = currentWeekBounds();
+  const completed = state.orders.filter((order) => order.status === "completed" && new Date(order.created_at) >= start && new Date(order.created_at) < end);
+  const completedTotal = completed.reduce((total, order) => total + Number(order.total), 0);
+  const pending = state.orders.filter((order) => order.status === "pending");
+  const dayFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" });
+  ordersWeek.textContent = `Resumo de ${dayFormatter.format(start)} até ${dayFormatter.format(new Date(end.getTime() - 1))}. Pedidos antigos continuam guardados para consulta.`;
+  document.querySelector("[data-week-completed-count]").textContent = completed.length;
+  document.querySelector("[data-week-completed-total]").textContent = money(completedTotal);
+  document.querySelector("[data-pending-count]").textContent = pending.length;
+}
+
+function orderItemMarkup(item) {
+  const quantity = Number(item.quantity) || 1;
+  const total = Number(item.subtotal ?? (Number(item.unit_price) || 0) * quantity);
+  const options = Array.isArray(item.options) ? item.options.filter(Boolean) : [];
+  return `<li><b>${quantity}x ${escapeHtml(item.name || "Item")}</b> — ${money(total)}${options.length ? `<small>${options.map(escapeHtml).join(" · ")}</small>` : ""}</li>`;
+}
+
+function renderOrders() {
+  renderWeeklySummary();
+  const orders = state.orderFilter === "all" ? state.orders : state.orders.filter((order) => order.status === state.orderFilter);
+  ordersList.innerHTML = orders.map((order) => {
+    const status = ORDER_STATUS[order.status] || ORDER_STATUS.pending;
+    const items = Array.isArray(order.items) ? order.items : [];
+    const actions = order.status === "pending"
+      ? `<div class="order-actions"><button class="complete-order" type="button" data-order-action="completed" data-order-id="${order.id}">Concluir</button><button class="cancel-order" type="button" data-order-action="not_completed" data-order-id="${order.id}">Não concluído</button></div>`
+      : `<div class="order-actions"><button class="restore-order" type="button" data-order-action="pending" data-order-id="${order.id}">Voltar para pendente</button></div>`;
+    return `<article class="order-row">
+      <div class="order-row-main">
+        <div class="order-meta"><b class="order-code">${orderNumber(order)}</b><span class="order-status-badge ${status.className}">${status.label}</span><span class="order-date">feito em ${orderDate(order.created_at)}</span></div>
+        <ul class="order-items">${items.map(orderItemMarkup).join("") || "<li>Itens não informados.</li>"}</ul>
+        ${order.note ? `<p class="order-note"><b>Observação:</b> ${escapeHtml(order.note)}</p>` : ""}
+      </div>
+      <div class="order-row-side"><b class="order-total">${money(Number(order.total))}</b>${actions}</div>
+    </article>`;
+  }).join("");
+  ordersEmpty.hidden = orders.length > 0;
+}
+
+async function loadOrders(showStatus = true) {
+  if (!supabaseClient) return;
+  if (showStatus) setOrdersStatus("Carregando pedidos...");
+  const { data, error } = await supabaseClient.from("orders").select("*").order("created_at", { ascending: false }).limit(120);
+  if (error) {
+    setOrdersStatus("Não foi possível carregar os pedidos. Confira se a configuração foi concluída no Supabase.", true);
+    return;
+  }
+  state.orders = data || [];
+  renderOrders();
+  setOrdersStatus(state.orders.length ? "" : "Ainda não há pedidos registrados.");
+}
+
+async function updateOrderStatus(id, status) {
+  const labels = { pending: "pendente", completed: "concluído", not_completed: "não concluído" };
+  if (status === "not_completed" && !window.confirm("Marcar este pedido como não concluído? Você poderá desfazer depois.")) return;
+  setOrdersStatus("Salvando status do pedido...");
+  const { error } = await supabaseClient.from("orders").update({
+    status,
+    completed_at: status === "completed" ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", id);
+  if (error) {
+    setOrdersStatus("Não foi possível alterar este pedido agora.", true);
+    return;
+  }
+  await loadOrders(false);
+  setOrdersStatus(`Pedido ${labels[status]} com sucesso.`);
+}
+
 async function uploadPhoto(file, productName) {
   if (!file) return null;
   if (file.size > 8 * 1024 * 1024) throw new Error("A foto é grande demais. Escolha uma imagem de até 8 MB.");
@@ -295,7 +399,8 @@ async function showDashboard() {
   loginScreen.hidden = true;
   resetScreen.hidden = true;
   dashboard.hidden = false;
-  await loadProducts();
+  await Promise.all([loadProducts(), loadOrders()]);
+  if (!orderRefreshTimer) orderRefreshTimer = window.setInterval(() => { loadOrders(false); }, 30000);
 }
 
 function isPasswordRecovery() {
@@ -363,6 +468,12 @@ document.querySelector("[data-category-filter]").addEventListener("change", (eve
 document.querySelector("[data-new-product]").addEventListener("click", addProduct);
 orderOptionsForm.addEventListener("submit", (event) => { event.preventDefault(); saveOrderOptions(); });
 importButton.addEventListener("click", importCurrentCatalog);
+orderFilter.addEventListener("change", (event) => { state.orderFilter = event.target.value; renderOrders(); });
+document.querySelector("[data-refresh-orders]").addEventListener("click", () => { loadOrders(); });
+ordersList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-order-action]");
+  if (button) updateOrderStatus(button.dataset.orderId, button.dataset.orderAction);
+});
 productGrid.addEventListener("click", (event) => {
   const card = event.target.closest("[data-editor-id]");
   if (!card) return;

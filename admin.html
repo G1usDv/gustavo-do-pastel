@@ -73,6 +73,29 @@
           </div>
         </section>
 
+        <section class="orders-card" data-orders-card>
+          <div class="orders-heading">
+            <div>
+              <p class="eyebrow">CONTROLE DE VENDAS</p>
+              <h2>Pedidos da semana</h2>
+              <p data-orders-week>Carregando resumo...</p>
+            </div>
+            <span>Atualiza a cada 30 segundos</span>
+          </div>
+          <div class="order-summary-grid">
+            <article><small>CONCLUÍDOS</small><b data-week-completed-count>0</b><span>pedidos na semana</span></article>
+            <article><small>VENDAS CONCLUÍDAS</small><b data-week-completed-total>R$ 0,00</b><span>valor confirmado</span></article>
+            <article><small>PENDENTES</small><b data-pending-count>0</b><span>para conferir no WhatsApp</span></article>
+          </div>
+          <div class="orders-tools">
+            <label>Mostrar<select data-order-filter><option value="all">Todos os pedidos</option><option value="pending">Pendentes</option><option value="completed">Concluídos</option><option value="not_completed">Não concluídos</option></select></label>
+            <button class="secondary-button" type="button" data-refresh-orders>Atualizar agora</button>
+          </div>
+          <p class="orders-status" data-orders-status aria-live="polite"></p>
+          <div class="orders-list" data-orders-list></div>
+          <div class="empty-orders" hidden data-orders-empty><b>☀</b><h3>Nenhum pedido ainda</h3><p>Quando alguém finalizar pelo WhatsApp, o pedido aparecerá aqui como pendente.</p></div>
+        </section>
+
         <section class="order-options-card" data-order-options-card>
           <div class="order-options-heading">
             <div>
@@ -120,6 +143,6 @@
     <script src="supabase-config.js"></script>
     <script src="supabase-client.js"></script>
     <script src="catalog-data.js"></script>
-    <script src="admin.js?v=20260729b"></script>
+    <script src="admin.js?v=20260729c"></script>
   </body>
 </html>
